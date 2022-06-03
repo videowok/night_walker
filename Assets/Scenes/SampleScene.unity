@@ -428,6 +428,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06f8f31123809a945b6d888d1a63266c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MAZE_SIZE_X: 31
+  MAZE_SIZE_Y: 31
+  MAZE_SCALE_X: 1
+  MAZE_SCALE_Y: 1
+  TUNNEL_SECTIONS: 20
+  TUNNEL_MARGIN: 6
+  TUNNEL_SIZE: 10
+  wallBlockPrefab: {fileID: 8661684984470320660, guid: 9c98480c50ab8704a8f66142a1a43963, type: 3}
+  wallXPrefab: {fileID: 8560303892914632789, guid: 716c7302a44a11943916ede960de799d, type: 3}
+  wallZPrefab: {fileID: 7945903988802497724, guid: fc84d3354625f3846a7f6f91278673f1, type: 3}
 --- !u!4 &1811880556
 Transform:
   m_ObjectHideFlags: 0
