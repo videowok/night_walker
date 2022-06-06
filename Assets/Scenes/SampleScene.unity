@@ -176,7 +176,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 052821051301bb849ab0e4f50ad32d10, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -214,8 +214,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 319652331}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 14.5, y: 0, z: 14.5}
+  m_LocalScale: {x: 3, y: 1, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -391,13 +391,65 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.5150381, y: 0, z: 0, w: 0.85716736}
+  m_LocalPosition: {x: 14.5, y: 21, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 62, y: 0, z: 0}
+--- !u!1 &995453307
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 995453309}
+  - component: {fileID: 995453308}
+  m_Layer: 0
+  m_Name: Maze
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &995453308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 995453307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 987095c0553e3ec4ca36917abbc50196, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MAZE_SIZE_X: 30
+  MAZE_SIZE_Y: 30
+  TUNNEL_SECTIONS: 30
+  TUNNEL_MARGIN: 6
+  TUNNEL_SIZE: 8
+  wallBlockPrefab: {fileID: 8661684984470320660, guid: 9c98480c50ab8704a8f66142a1a43963, type: 3}
+  trailMarkerPrefab: {fileID: 355061271568819187, guid: e29b9e82433b3034884319030b4ee404, type: 3}
+  targetMarkerPrefab: {fileID: 9147130977552147394, guid: 24a8503badc5f0140baf5ee6358da7c9, type: 3}
+--- !u!4 &995453309
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 995453307}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14.5, y: 21, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1811880554
 GameObject:
@@ -428,16 +480,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06f8f31123809a945b6d888d1a63266c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MAZE_SIZE_X: 31
-  MAZE_SIZE_Y: 31
-  MAZE_SCALE_X: 1
-  MAZE_SCALE_Y: 1
-  TUNNEL_SECTIONS: 20
-  TUNNEL_MARGIN: 6
-  TUNNEL_SIZE: 10
-  wallBlockPrefab: {fileID: 8661684984470320660, guid: 9c98480c50ab8704a8f66142a1a43963, type: 3}
-  wallXPrefab: {fileID: 8560303892914632789, guid: 716c7302a44a11943916ede960de799d, type: 3}
-  wallZPrefab: {fileID: 7945903988802497724, guid: fc84d3354625f3846a7f6f91278673f1, type: 3}
+  maze: {fileID: 995453308}
+  robotPrefab: {fileID: 1907228812475290427, guid: 3a77c8f25fcea4243bcf33891ebc760c, type: 3}
 --- !u!4 &1811880556
 Transform:
   m_ObjectHideFlags: 0
