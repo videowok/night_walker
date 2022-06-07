@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Xml.Serialization;
 using UnityEngine;
 
 
@@ -9,9 +7,12 @@ public class Director : MonoBehaviour
 {
     public Maze maze;
 
-    [SerializeField] GameObject robotPrefab;
 
-    private GameObject robotTest;
+    [SerializeField] GameObject playerPrefab;
+    [SerializeField] GameObject robotFlierPrefab;
+    [SerializeField] GameObject robotHunterPrefab;
+
+    //private GameObject robotTest;
 
 
     // Start is called before the first frame update
@@ -21,7 +22,16 @@ public class Director : MonoBehaviour
 
         maze.BuildMaze();
 
-        robotTest = Instantiate(robotPrefab);
+        //robotTest = Instantiate(robotPrefab);
+
+        Instantiate(playerPrefab);
+
+        Instantiate(robotHunterPrefab);
+
+        Instantiate(robotFlierPrefab);
+        Instantiate(robotFlierPrefab);
+        Instantiate(robotFlierPrefab);
+
     }
 
     // Update is called once per frame

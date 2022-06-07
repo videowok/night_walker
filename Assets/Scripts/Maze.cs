@@ -6,8 +6,7 @@ public class Maze : MonoBehaviour
 {
     public const int PATH_LENGTH = 10;
 
-    private const float MAZE_SCALE_X = 1.0f;
-    private const float MAZE_SCALE_Y = 1.0f;
+    private const float MAZE_SCALE = 1.0f;
 
     [SerializeField] int MAZE_SIZE_X = 30;
     [SerializeField] int MAZE_SIZE_Y = 30;
@@ -84,12 +83,16 @@ public class Maze : MonoBehaviour
     // ADD BOUNDARY CHECK
     static public Vector3 GetMazePositionFromIndex(int x, int y)
     {
-        return new Vector3(x * MAZE_SCALE_X, 0, y * MAZE_SCALE_Y);
+        return new Vector3(x * MAZE_SCALE, 0, y * MAZE_SCALE);
     }
 
     static public int GetMazeDX(MAZE_DIRECTION dir)
     {
         return mazeDirection[(int)dir, 0];
+    }
+    static public int GetMazeIndexFromCoord(float xy)
+    {
+        return (int)Mathf.Round(xy / MAZE_SCALE);
     }
 
     static public int GetMazeDY(MAZE_DIRECTION dir)
@@ -97,7 +100,7 @@ public class Maze : MonoBehaviour
         return mazeDirection[(int)dir, 1];
     }
 
-    public bool IsEmpty(int x, int y)
+    private bool IsEmpty(int x, int y)
     {
         if ((x < 0) || (x >= MAZE_SIZE_X))
             return false;
@@ -108,7 +111,7 @@ public class Maze : MonoBehaviour
         return mapArray[x, y] == 0;
     }
 
-    public bool CanTravel(int x, int y, MAZE_DIRECTION dir)
+    private bool CanTravel(int x, int y, MAZE_DIRECTION dir)
     {
         int d = (int)dir;
 
@@ -199,8 +202,8 @@ public class Maze : MonoBehaviour
             {
                 if (mapArray[x, y] == 1)
                 {
-                    pos.x = x * MAZE_SCALE_X;
-                    pos.z = y * MAZE_SCALE_Y;
+                    pos.x = x * MAZE_SCALE;
+                    pos.z = y * MAZE_SCALE;
 
                     block = Instantiate(wallBlockPrefab);
                     block.transform.position = pos;
@@ -211,18 +214,6 @@ public class Maze : MonoBehaviour
                 }
             }
         }
-    }
-
-    private void OutputPath(MAZE_DIRECTION[] path, int steps)
-    {
-        string test = "PATH found: ";
-
-        for (int i = 1; i < steps; i++) // 0 is starting pos
-        {
-            test += path[i] + " * ";
-        }
-
-        Debug.Log(test);
     }
 
     private void CachePathPosition(int[,] path, int index, int x, int y)
@@ -295,10 +286,29 @@ public class Maze : MonoBehaviour
 
         CreatePath(x, y, destX, destY, path, 1);        // recursive
 
-        OutputPath(path, bestPathSteps);
+        //OutputPath(path, bestPathSteps);
 
         return bestPathSteps;
     }
+
+
+    /// <summary>
+    /// DEBUG / TEST CODE
+    /// </summary>
+
+/*
+    private void OutputPath(MAZE_DIRECTION[] path, int steps)
+    {
+        string test = "PATH found: ";
+
+        for (int i = 1; i < steps; i++) // 0 is starting pos
+        {
+            test += path[i] + " * ";
+        }
+
+        Debug.Log(test);
+    }
+*/
 
     public void ShowTargetMarker(int x, int y)
     {
@@ -335,8 +345,6 @@ public class Maze : MonoBehaviour
         foreach (GameObject obj in gobs)
             Destroy(obj);
     }
-
-
 
     /*
     private GameObject GetBlockByType(string type)

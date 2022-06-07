@@ -1,13 +1,15 @@
+#define SHOW_MARKERS
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Robot : MonoBehaviour
 {
-    private Maze maze;  // 2DO: use director instance
+    protected Maze maze;  // 2DO: use director instance
 
-    private int mazeX;      // current grip pos
-    private int mazeY;
+    protected int mazeX;    // current grip pos
+    protected int mazeY;
 
     private int mazeNextX;  // next grid pos
     private int mazeNextY;
@@ -24,9 +26,11 @@ public class Robot : MonoBehaviour
     private int currentPathLength;
     private Maze.MAZE_DIRECTION[] currentPath = new Maze.MAZE_DIRECTION[Maze.PATH_LENGTH];
 
+    public float speed = 1;
+
     private Vector3 Velocity = new Vector3();
-    
-    private enum BEHAVIOR
+
+    protected enum BEHAVIOR
     {
         IDLE = 0,
         MOVING,
@@ -34,33 +38,34 @@ public class Robot : MonoBehaviour
         COUNT
     };
 
-    private BEHAVIOR behavior;
+    protected BEHAVIOR behavior;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        maze = GameObject.Find("/Maze").GetComponent<Maze>();
-
-        behavior = BEHAVIOR.IDLE;
-
-        int[] testPos = maze.GetEmptySpaceInMaze();
-
-        if (testPos != null)
-        {
-            mazeX = testPos[0];
-            mazeY = testPos[1];
-
-            Vector3 pos = Maze.GetMazePositionFromIndex(mazeX, mazeY);
-            pos.y = gameObject.transform.position.y;
-            gameObject.transform.position = pos;
-
-            FindRandomDestination();
-        }
+        HandleDefaultStart();
     }
 
     // Update is called once per frame
     void Update()
+    {
+        HandleDefaultUpdate();
+    }
+
+    public virtual void HandleDefaultStart()
+    {
+        maze = GameObject.Find("/Maze").GetComponent<Maze>();
+
+        behavior = BEHAVIOR.IDLE;
+
+        if (SetRandomPosition())
+        {
+            FindRandomDestination();
+        }
+    }
+
+    public virtual void HandleDefaultUpdate()
     {
         switch (behavior)
         {
@@ -76,7 +81,54 @@ public class Robot : MonoBehaviour
         }
     }
 
-    private void HandleMove()
+    protected void ShowMarkers()
+    {
+#if SHOW_MARKERS
+        if (gameObject.tag.Equals("Hunter"))
+        {
+            // show path markers
+            int x = mazeX;
+            int y = mazeY;
+
+            for (int i = currentPathIndex; i < currentPathLength; i++)
+            {
+                x += Maze.GetMazeDX(currentPath[i]);
+                y += Maze.GetMazeDY(currentPath[i]);
+
+                //Debug.Log("Path entry: " + currentPath[i]);
+
+                // test marker
+                maze.ShowPathMarker(x, y);
+            }
+        }
+#endif
+    }
+
+    protected void RemoveMarkers()
+    {
+#if SHOW_MARKERS
+        if (gameObject.tag.Equals("Hunter"))
+        {
+            maze.RemoveTargetMarkers();
+            maze.RemoveTrailMarkers();
+        }
+#endif
+    }
+
+    protected void SetPositionFromIndex()
+    {
+        Vector3 pos = Maze.GetMazePositionFromIndex(mazeX, mazeY);
+        pos.y = gameObject.transform.position.y;    // restore y
+        gameObject.transform.position = pos;
+    }
+
+    public virtual void HandleArrival()
+    {
+        RemoveMarkers();
+        FindRandomDestination();
+    }
+
+    protected void HandleMove()
     {
         Vector3 pos = gameObject.transform.position;
         Vector3 dVel = Velocity * Time.deltaTime;
@@ -91,16 +143,11 @@ public class Robot : MonoBehaviour
         {
             mazeX = mazeNextX;
             mazeY = mazeNextY;
-
-            pos = Maze.GetMazePositionFromIndex(mazeX, mazeY);
-            pos.y = gameObject.transform.position.y;
-            gameObject.transform.position = pos;
+            SetPositionFromIndex();
 
             if ((mazeX == mazeFinalX) && (mazeY == mazeFinalY))     // arrived at target?
             {
-                maze.RemoveTargetMarkers();
-                maze.RemoveTrailMarkers();
-                FindRandomDestination();
+                HandleArrival();
                 return;
             }
 
@@ -115,7 +162,7 @@ public class Robot : MonoBehaviour
         }
     }
 
-    private void MoveToNextPosition()
+    protected void MoveToNextPosition()
     {
         behavior = BEHAVIOR.MOVING;
 
@@ -131,42 +178,69 @@ public class Robot : MonoBehaviour
         distanceToNextTravelled = 0;
         distanceToNext = Vector3.Magnitude(toDest);
 
-        Velocity = Vector3.Normalize(toDest);
+        Velocity = Vector3.Normalize(toDest) * speed;
     }
 
-    private void CreateTargetPath()
+    protected void CreateTargetPath()
     {
         currentPathLength = maze.FindBestPath(mazeX, mazeY, mazeFinalX, mazeFinalY, currentPath);
         currentPathIndex = 1;   // 0 is current pos
 
         MoveToNextPosition();
 
-        // show path
-        int x = mazeX;
-        int y = mazeY;
-
-        for (int i = currentPathIndex; i < currentPathLength; i++)
-        {
-            x += Maze.GetMazeDX(currentPath[i]);
-            y += Maze.GetMazeDY(currentPath[i]);
-
-            //Debug.Log("Path entry: " + currentPath[i]);
-
-            // test marker
-            maze.ShowPathMarker(x, y);
-        }
+        ShowMarkers();
     }
 
-    private void FindRandomDestination()
+    protected bool SetRandomPosition()
+    {
+        int[] testPos = maze.GetEmptySpaceInMaze();
+
+        if (testPos != null)
+        {
+            mazeX = testPos[0];
+            mazeY = testPos[1];
+            SetPositionFromIndex();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    protected void FindRandomDestination()
     {
         int[] testPos = maze.GetEmptySpaceInMaze();
 
         mazeFinalX = testPos[0];
         mazeFinalY = testPos[1];
 
-        // show test marker
-        maze.ShowTargetMarker(mazeFinalX, mazeFinalY);
+#if SHOW_MARKERS
+        // show destination marker
+        //maze.ShowTargetMarker(mazeFinalX, mazeFinalY);
+#endif
 
         CreateTargetPath();
+    }
+
+    protected bool FindPlayer()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("PlayerTag");
+
+        if (player == null)
+            return false;
+
+        Player p = player.GetComponent<Player>();
+
+        if (p == null)
+            return false;
+
+        mazeFinalX = p.mazeX;
+        mazeFinalY = p.mazeY;
+
+        //Debug.Log("Player found");
+
+        CreateTargetPath();
+
+        return true;
     }
 }

@@ -6,6 +6,8 @@ TagManager:
   tags:
   - TargetMarker
   - TrailMarker
+  - PlayerTag
+  - Hunter
   layers:
   - Default
   - TransparentFX
