@@ -1,4 +1,4 @@
-#define SHOW_MARKERS
+//#define SHOW_MARKERS
 
 using System.Collections;
 using System.Collections.Generic;
@@ -6,7 +6,9 @@ using UnityEngine;
 
 public class Robot : MonoBehaviour
 {
-    protected Maze maze;  // 2DO: use director instance
+    private const float DEFAULT_SHOT_DELAY = 1.0f;
+
+    protected Maze maze;
 
     protected int mazeX;    // current grip pos
     protected int mazeY;
@@ -20,15 +22,18 @@ public class Robot : MonoBehaviour
     private int mazeFinalX; // final target grid pos
     private int mazeFinalY;
 
+    protected float speed = 1;
+    private Vector3 Velocity = new Vector3();
+
+    protected float shotDelay = 0;
+
     // movement path
 
     private int currentPathIndex;
     private int currentPathLength;
     private Maze.MAZE_DIRECTION[] currentPath = new Maze.MAZE_DIRECTION[Maze.PATH_LENGTH];
 
-    public float speed = 1;
-
-    private Vector3 Velocity = new Vector3();
+    // behavior
 
     protected enum BEHAVIOR
     {
@@ -53,9 +58,10 @@ public class Robot : MonoBehaviour
         HandleDefaultUpdate();
     }
 
-    public virtual void HandleDefaultStart()
+    // POLYMORPHISM
+    protected virtual void HandleDefaultStart()
     {
-        maze = GameObject.Find("/Maze").GetComponent<Maze>();
+        maze = Director.Instance.maze;
 
         behavior = BEHAVIOR.IDLE;
 
@@ -65,8 +71,11 @@ public class Robot : MonoBehaviour
         }
     }
 
-    public virtual void HandleDefaultUpdate()
+    // POLYMORPHISM
+    protected virtual void HandleDefaultUpdate()
     {
+        shotDelay -= Time.deltaTime;
+
         switch (behavior)
         {
             case BEHAVIOR.MOVING:
@@ -81,38 +90,57 @@ public class Robot : MonoBehaviour
         }
     }
 
-    protected void ShowMarkers()
+    // POLYMORPHISM (overloading)
+    protected void FireShot(Vector3 pos, Vector3 dir, float delay, AudioManager.SFX sfx)
     {
-#if SHOW_MARKERS
-        if (gameObject.tag.Equals("Hunter"))
-        {
-            // show path markers
-            int x = mazeX;
-            int y = mazeY;
+        shotDelay = delay;
 
-            for (int i = currentPathIndex; i < currentPathLength; i++)
-            {
-                x += Maze.GetMazeDX(currentPath[i]);
-                y += Maze.GetMazeDY(currentPath[i]);
+        GameObject gob = Instantiate(Director.Instance.GetShotPrefab());
+        Shot shot = gob.GetComponent<Shot>();
+        shot.Init(pos, dir);
 
-                //Debug.Log("Path entry: " + currentPath[i]);
-
-                // test marker
-                maze.ShowPathMarker(x, y);
-            }
-        }
-#endif
+        Director.Instance.audioManager.Play(sfx);
     }
 
-    protected void RemoveMarkers()
+    // POLYMORPHISM (overloading)
+    protected void FireShot(Vector3 pos, Vector3 dir)
     {
-#if SHOW_MARKERS
-        if (gameObject.tag.Equals("Hunter"))
+        FireShot(pos, dir, DEFAULT_SHOT_DELAY, AudioManager.SFX.SHOT01);
+    }
+
+
+    protected void ShowHit(Vector3 pos)
+    {
+        GameObject gob = Instantiate(Director.Instance.GetHitBigPrefab());
+        Debug.Assert(gob != null, "no bighit prefab");
+        HitBig hit = gob.GetComponent<HitBig>();
+        hit.Init(pos);
+    }
+
+    protected void BlowUp()
+    {
+        Debug.Log("ROBOT hit: " + gameObject.tag);
+
+        ShowHit(gameObject.transform.position);
+        Destroy(gameObject);
+
+        Director.Instance.audioManager.PlayExplosion();
+    }
+
+    // POLYMORPHISM
+    protected virtual void HandleGettingHit(Collision col)
+    {
+        if (col.collider.tag.Equals("ShotTag"))
         {
-            maze.RemoveTargetMarkers();
-            maze.RemoveTrailMarkers();
+            BlowUp();
         }
-#endif
+    }
+
+    void OnCollisionEnter(Collision col)
+    {
+        Debug.Log("ROBOT hit " + col.collider.name);
+
+        HandleGettingHit(col);
     }
 
     protected void SetPositionFromIndex()
@@ -242,5 +270,44 @@ public class Robot : MonoBehaviour
         CreateTargetPath();
 
         return true;
+    }
+
+
+    //------------------------------------------------
+    //
+    // DEBUG / TEST CODE
+    
+    protected void ShowMarkers()
+    {
+#if SHOW_MARKERS
+        if (gameObject.tag.Equals("Hunter"))
+        {
+            // show path markers
+            int x = mazeX;
+            int y = mazeY;
+
+            for (int i = currentPathIndex; i < currentPathLength; i++)
+            {
+                x += Maze.GetMazeDX(currentPath[i]);
+                y += Maze.GetMazeDY(currentPath[i]);
+
+                //Debug.Log("Path entry: " + currentPath[i]);
+
+                // test marker
+                maze.ShowPathMarker(x, y);
+            }
+        }
+#endif
+    }
+
+    protected void RemoveMarkers()
+    {
+#if SHOW_MARKERS
+        if (gameObject.tag.Equals("Hunter"))
+        {
+            maze.RemoveTargetMarkers();
+            maze.RemoveTrailMarkers();
+        }
+#endif
     }
 }

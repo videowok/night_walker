@@ -9,7 +9,7 @@ public class RobotFlier : Robot
     // Start is called before the first frame update
     void Start()
     {
-        speed = 2;
+        speed = 3;
         HandleDefaultStart();
     }
 
@@ -17,5 +17,15 @@ public class RobotFlier : Robot
     void Update()
     {
         HandleDefaultUpdate();
+    }
+
+    // POLYMORPHISM
+    override protected void HandleGettingHit(Collision col)
+    {
+        if (col.collider.tag.Equals("ShotTag"))
+        {
+            Director.Instance.AddScore(100);
+            BlowUp();
+        }
     }
 }

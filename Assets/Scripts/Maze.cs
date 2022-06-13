@@ -8,8 +8,8 @@ public class Maze : MonoBehaviour
 
     private const float MAZE_SCALE = 1.0f;
 
-    [SerializeField] int MAZE_SIZE_X = 30;
-    [SerializeField] int MAZE_SIZE_Y = 30;
+    private const int MAZE_SIZE_X = 30;
+    private const int MAZE_SIZE_Y = 30;
 
     [SerializeField] int TUNNEL_SECTIONS = 30;
     [SerializeField] int TUNNEL_MARGIN = 6;
@@ -80,7 +80,12 @@ public class Maze : MonoBehaviour
         return (value < min) ? min : (value > max) ? max : value;
     }
 
-    // ADD BOUNDARY CHECK
+    static public Vector3 GetMazeCenterPosition()
+    {
+        return new Vector3(MAZE_SIZE_X / 2 * MAZE_SCALE, 0, MAZE_SIZE_Y / 2 * MAZE_SCALE);
+    }
+
+    // 2DO: ADD BOUNDARY CHECK
     static public Vector3 GetMazePositionFromIndex(int x, int y)
     {
         return new Vector3(x * MAZE_SCALE, 0, y * MAZE_SCALE);
@@ -292,23 +297,24 @@ public class Maze : MonoBehaviour
     }
 
 
-    /// <summary>
-    /// DEBUG / TEST CODE
-    /// </summary>
 
-/*
-    private void OutputPath(MAZE_DIRECTION[] path, int steps)
-    {
-        string test = "PATH found: ";
+    //------------------------------------------------
+    //
+    // DEBUG / TEST CODE
 
-        for (int i = 1; i < steps; i++) // 0 is starting pos
+    /*
+        private void OutputPath(MAZE_DIRECTION[] path, int steps)
         {
-            test += path[i] + " * ";
-        }
+            string test = "PATH found: ";
 
-        Debug.Log(test);
-    }
-*/
+            for (int i = 1; i < steps; i++) // 0 is starting pos
+            {
+                test += path[i] + " * ";
+            }
+
+            Debug.Log(test);
+        }
+    */
 
     public void ShowTargetMarker(int x, int y)
     {

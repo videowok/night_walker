@@ -8,6 +8,9 @@ TagManager:
   - TrailMarker
   - PlayerTag
   - Hunter
+  - ShotTag
+  - Flier
+  - WallTag
   layers:
   - Default
   - TransparentFX
