@@ -13,24 +13,27 @@ public class CameraManager : MonoBehaviour
         DEMO
     };
 
-    private TYPE type;  // = TYPE.ISOMETRIC;
+    private TYPE type;
+    private TYPE typeUser = TYPE.ISOMETRIC; // cashe user preferred
 
     private Vector3[] offsetByType =
     {
         new Vector3(0, 4, -5),
-        new Vector3(0, .4f, 0),
+        new Vector3(0, .8f, 0),
         new Vector3(0, 15, 0),
-        new Vector3(0, 0, 0),   // NOT USED (COUNT)
-        new Vector3(15, 7, -4)  // DEMO
+        new Vector3(0, 0, 0),       // NOT USED (COUNT)
+        new Vector3(15, 4.5f, -4)   // DEMO
     };
 
     private float[] angleByType = {30, 0, 90, 0, 35};  // on x (pitch)
     private Vector3 angle = new Vector3(0,0,0);
+    private GameObject mazeAim;
 
 
     // Start is called before the first frame update
     void Start()
     {
+        mazeAim = GameObject.Find("/MazeCenter");
     }
 
     // Update is called once per frame
@@ -40,24 +43,24 @@ public class CameraManager : MonoBehaviour
 
     void LateUpdate()
     {
-        if (type == TYPE.DEMO)  // no update in DEMO
-            return;
-
         UpdateCamara();
     }
 
+    // ABSTRACTION
     private void SetRotation(float y)
     {
         angle.y = y;
         transform.eulerAngles = angle;
     }
 
+    // ABSTRACTION
     private void UpdateByOffset(Vector3 pos)
     {
         transform.position = pos + offsetByType[(int)type];
         SetRotation(0);
     }
 
+    // ABSTRACTION
     private void UpdateByRotatedOffset(GameObject player)
     {
         if (player == null)
@@ -73,7 +76,7 @@ public class CameraManager : MonoBehaviour
 
     private void UpdateCamara()
     {
-        GameObject player = GameObject.FindGameObjectWithTag("PlayerTag");
+        GameObject player = GameObject.FindGameObjectWithTag(Director.PLAYER_TAG);
 
         switch (type)
         {
@@ -90,8 +93,13 @@ public class CameraManager : MonoBehaviour
 
             default:    // demo
 
-                transform.position = offsetByType[(int)TYPE.DEMO];
-                SetRotation(0);
+                Vector3 v = offsetByType[(int)TYPE.DEMO];
+                v = Quaternion.Euler(0, Time.fixedTime * 5, 0) * v;
+                v.y += Mathf.Sin(Time.fixedTime * .2f) * 3;   // up / down
+                v += mazeAim.transform.position;
+                transform.position = v;
+                transform.LookAt(mazeAim.transform);
+
                 break;
         }
     }
@@ -99,8 +107,17 @@ public class CameraManager : MonoBehaviour
     public void SetType(TYPE t)
     {
         type = t;
+
+        if (t != TYPE.DEMO) // cache user cam
+            typeUser = t;
+
         angle.x = angleByType[(int)type];
         UpdateCamara();
+    }
+
+    public void SetTypeToLsetUsed()
+    {
+        SetType(typeUser);
     }
 
     public void SwitchCamera()

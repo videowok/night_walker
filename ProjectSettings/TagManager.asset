@@ -7,10 +7,12 @@ TagManager:
   - TargetMarker
   - TrailMarker
   - PlayerTag
-  - Hunter
-  - ShotTag
-  - Flier
   - WallTag
+  - FlierTag
+  - HunterTag
+  - ShotEnemyTag
+  - ShotPlayerTag
+  - RoverTag
   layers:
   - Default
   - TransparentFX

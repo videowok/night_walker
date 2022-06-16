@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8850060620479092573}
   m_Layer: 0
   m_Name: RobotHunter
-  m_TagString: Hunter
+  m_TagString: HunterTag
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -110,4 +110,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41d0ec74cda1eea439fb1091c1e911be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 1

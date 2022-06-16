@@ -6,12 +6,10 @@ using UnityEngine;
 // INHERITANCE
 public class RobotHunter : Robot
 {
-    private const float TARGET_SHOT_RANGE = 1.5f;
-
-
     // Start is called before the first frame update
     void Start()
     {
+        hitsToKill = 2;
         HandleDefaultStart();
     }
 
@@ -24,16 +22,14 @@ public class RobotHunter : Robot
     // POLYMORPHISM
     override protected void HandleDefaultStart()
     {
-        maze = Director.Instance.maze;
-
-        behavior = BEHAVIOR.IDLE;
-
-        if (!SetRandomPosition())
+        if (!SetRandomPosition(GameObject.FindGameObjectWithTag(Director.PLAYER_TAG)))
             return;
 
         HandleArrival();    // also starts moving
 
         shotDelay = Random.Range(3, 6); // don't shoot right away, or all at the same time
+
+        nextTargetEvaluation = GetRetargetSteps();
     }
 
     // POLYMORPHISM
@@ -43,24 +39,13 @@ public class RobotHunter : Robot
 
         // shoot at player
 
-        GameObject player = GameObject.FindGameObjectWithTag("PlayerTag");
+        ShootPlayer();
+    }
 
-        if (player == null)
-            return;
-
-        if (shotDelay > 0)
-            return;
-
-        // shoot
-        
-        if (Mathf.Abs(player.transform.position.z - transform.position.z) < TARGET_SHOT_RANGE)
-        {
-            FireShot(transform.position, player.transform.position.x < transform.position.x ? Vector3.left : Vector3.right);
-        }
-        else if (Mathf.Abs(player.transform.position.x - transform.position.x) < TARGET_SHOT_RANGE)
-        {
-            FireShot(transform.position, player.transform.position.z < transform.position.z ? Vector3.back : Vector3.forward);
-        }
+    // POLYMORPHISM
+    override protected int GetRetargetSteps()
+    {
+        return Random.Range(TARGET_EVALUATION_STEPS_MIN, TARGET_EVALUATION_STEPS_MAX + 1);
     }
 
     // POLYMORPHISM
@@ -75,12 +60,21 @@ public class RobotHunter : Robot
     }
 
     // POLYMORPHISM
-    override protected void HandleGettingHit(Collision col)
+    override protected void HandleCollision(Collision col)
     {
-        if (col.collider.tag.Equals("ShotTag"))
+        if (col.collider.tag.Equals(Director.SHOT_PLAYER_TAG))
         {
-            Director.Instance.AddScore(500);
-            BlowUp();
+            --hitsToKill;
+
+            if (hitsToKill <= 0)
+            {
+                Director.Instance.AddScore(500);
+                BlowUp();
+            }
+            else
+            {
+                Damage();
+            }
         }
     }
 }

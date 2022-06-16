@@ -20,11 +20,15 @@ public class RobotFlier : Robot
     }
 
     // POLYMORPHISM
-    override protected void HandleGettingHit(Collision col)
+    override protected void HandleCollision(Collision col)
     {
-        if (col.collider.tag.Equals("ShotTag"))
+        if (col.collider.tag.Equals(Director.SHOT_PLAYER_TAG))
         {
-            Director.Instance.AddScore(100);
+            Director.Instance.AddScore(100);    // killed by player
+            BlowUp();
+        }
+        else if (col.collider.tag.Equals(Director.PLAYER_TAG))
+        {
             BlowUp();
         }
     }

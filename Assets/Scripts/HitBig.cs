@@ -7,7 +7,7 @@ using UnityEngine;
 public class HitBig : Hit
 {
     private const float DURATION = .3f;
-    private const float SCALE_MAX = 3;  //.5f;
+    private const float SCALE_MAX = 3;
 
 
     // Start is called before the first frame update

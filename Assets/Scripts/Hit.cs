@@ -1,10 +1,9 @@
-
 using UnityEngine;
 
 public class Hit : MonoBehaviour
 {
     private const float DEFAULT_DURATION = .1f;
-    private const float DEFAULT_SCALE_MAX = 1;  //.5f;
+    private const float DEFAULT_SCALE_MAX = 1;
 
     private float age;
     private Renderer _renderer;
@@ -26,11 +25,13 @@ public class Hit : MonoBehaviour
         HandleDefaultUpdate();
     }
 
+    // POLYMORPHISM
     protected virtual void HandleDefaultStart()
     {
         _renderer = gameObject.GetComponent<Renderer>();
     }
 
+    // POLYMORPHISM
     protected virtual void HandleDefaultUpdate()
     {
         age += Time.deltaTime;
@@ -52,16 +53,19 @@ public class Hit : MonoBehaviour
 
         // alpha
 
-        color.a = 1.0f - s_base;
+        //color.a = (1.0f - s_base) * .5f;
+        color.a = (1.0f - Mathf.Sin(s_base * (Mathf.PI / 2.0f))) * .25f;
         _renderer.material.SetColor("_Color", color);
     }
 
+    // ABSTRACTION
     protected void SetPosAndScale(Vector3 pos)
     {
         gameObject.transform.position = pos;
         gameObject.transform.localScale.Set(0, 0, 0);
     }
 
+    // ABSTRACTION
     public virtual void Init(Vector3 pos)
     {
         duration = DEFAULT_DURATION;

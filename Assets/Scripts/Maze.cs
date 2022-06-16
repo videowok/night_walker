@@ -11,13 +11,14 @@ public class Maze : MonoBehaviour
     private const int MAZE_SIZE_X = 30;
     private const int MAZE_SIZE_Y = 30;
 
+    // ENCAPSULATION
     [SerializeField] int TUNNEL_SECTIONS = 30;
     [SerializeField] int TUNNEL_MARGIN = 6;
     [SerializeField] int TUNNEL_SIZE = 8;
 
     [SerializeField] GameObject wallBlockPrefab;
 
-    // TEST
+    // TEST / DEBUG
     [SerializeField] GameObject trailMarkerPrefab;
     [SerializeField] GameObject targetMarkerPrefab;
 
@@ -72,7 +73,6 @@ public class Maze : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
     }
 
     public static int Clamp(int value, int min, int max)
@@ -80,12 +80,11 @@ public class Maze : MonoBehaviour
         return (value < min) ? min : (value > max) ? max : value;
     }
 
-    static public Vector3 GetMazeCenterPosition()
-    {
-        return new Vector3(MAZE_SIZE_X / 2 * MAZE_SCALE, 0, MAZE_SIZE_Y / 2 * MAZE_SCALE);
-    }
+    //static public Vector3 GetMazeCenterPosition()
+    //{
+    //    return new Vector3(MAZE_SIZE_X / 2 * MAZE_SCALE, 0, MAZE_SIZE_Y / 2 * MAZE_SCALE);
+    //}
 
-    // 2DO: ADD BOUNDARY CHECK
     static public Vector3 GetMazePositionFromIndex(int x, int y)
     {
         return new Vector3(x * MAZE_SCALE, 0, y * MAZE_SCALE);
@@ -105,6 +104,7 @@ public class Maze : MonoBehaviour
         return mazeDirection[(int)dir, 1];
     }
 
+    // ABSTRACTION
     private bool IsEmpty(int x, int y)
     {
         if ((x < 0) || (x >= MAZE_SIZE_X))
@@ -116,6 +116,7 @@ public class Maze : MonoBehaviour
         return mapArray[x, y] == 0;
     }
 
+    // ABSTRACTION
     private bool CanTravel(int x, int y, MAZE_DIRECTION dir)
     {
         int d = (int)dir;
@@ -156,6 +157,7 @@ public class Maze : MonoBehaviour
         return freeSpaceList.Count == 0 ? null :freeSpaceList[ Random.Range(0, freeSpaceList.Count) ];
     }
 
+    // ABSTRACTION
     private void CarveBlock(int x, int y)
     {
         x = Clamp(x, 1, MAZE_SIZE_X - 2);
@@ -167,6 +169,7 @@ public class Maze : MonoBehaviour
         }
     }
 
+    // ABSTRACTION
     private void CarveTunnel(int xPos, int yPos)
     {
         for (int i = 0; i <= TUNNEL_SIZE; i++)
@@ -177,11 +180,13 @@ public class Maze : MonoBehaviour
             CarveBlock(xPos + TUNNEL_SIZE, yPos + i);
         }
     }
-
+     
     public void BuildMaze()
     {
         Vector3 pos = new Vector3(0, wallBlockPrefab.transform.position.y, 0);
         GameObject block;
+
+        freeSpaceList.Clear();  // remove free entries
 
         // make everything wall
 
@@ -221,12 +226,14 @@ public class Maze : MonoBehaviour
         }
     }
 
+    // ABSTRACTION
     private void CachePathPosition(int[,] path, int index, int x, int y)
     {
         path[index, 0] = x;
         path[index, 1] = y;
     }
 
+    // ABSTRACTION
     // have we already travelled on this point?
     private bool HasTraveled(int x, int y, int pathIndex)
     {
@@ -239,6 +246,7 @@ public class Maze : MonoBehaviour
         return false;
     }
 
+    // ABSTRACTION
     private void CreatePath(int x, int y, int destX, int destY, MAZE_DIRECTION[] path, int pathIndex)
     {
         MAZE_DIRECTION bestDirection = MAZE_DIRECTION.NONE;

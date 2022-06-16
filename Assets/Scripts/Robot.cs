@@ -4,11 +4,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class Robot : MonoBehaviour
 {
     private const float DEFAULT_SHOT_DELAY = 1.0f;
+    private const float PLAYER_SAFE_RANGE = 5.0f;              // no enemy spawns closer
 
-    protected Maze maze;
+    protected const float TARGET_SHOT_RANGE = 1.5f;             // far aim range
+    protected const float TARGET_AIMED_SHOT_RANGE = 5.0f;       // far near range
+
+    protected const int TARGET_EVALUATION_STEPS_MIN = 4;        // (in grid points)
+    protected const int TARGET_EVALUATION_STEPS_MAX = 10;       // (in grid points)
+    protected const int RANDOM_EVALUATION_STEPS = 18;           // (in grid points)
 
     protected int mazeX;    // current grip pos
     protected int mazeY;
@@ -26,12 +33,15 @@ public class Robot : MonoBehaviour
     private Vector3 Velocity = new Vector3();
 
     protected float shotDelay = 0;
+    protected int hitsToKill = 1;
 
     // movement path
 
     private int currentPathIndex;
     private int currentPathLength;
     private Maze.MAZE_DIRECTION[] currentPath = new Maze.MAZE_DIRECTION[Maze.PATH_LENGTH];
+
+    protected int nextTargetEvaluation;   // in grid points
 
     // behavior
 
@@ -43,7 +53,7 @@ public class Robot : MonoBehaviour
         COUNT
     };
 
-    protected BEHAVIOR behavior;
+    protected BEHAVIOR behavior = BEHAVIOR.IDLE;
 
 
     // Start is called before the first frame update
@@ -61,14 +71,12 @@ public class Robot : MonoBehaviour
     // POLYMORPHISM
     protected virtual void HandleDefaultStart()
     {
-        maze = Director.Instance.maze;
+        if (!SetRandomPosition(GameObject.FindGameObjectWithTag(Director.PLAYER_TAG)))
+            return;
 
-        behavior = BEHAVIOR.IDLE;
+        FindRandomDestination();
 
-        if (SetRandomPosition())
-        {
-            FindRandomDestination();
-        }
+        nextTargetEvaluation = GetRetargetSteps(); // if target not found, get a new destination
     }
 
     // POLYMORPHISM
@@ -91,48 +99,65 @@ public class Robot : MonoBehaviour
     }
 
     // POLYMORPHISM (overloading)
-    protected void FireShot(Vector3 pos, Vector3 dir, float delay, AudioManager.SFX sfx)
+    protected void FireShot(Vector3 pos, Vector3 dir, GameObject prefab, float delay, AudioManager.SFX sfx)
     {
         shotDelay = delay;
 
-        GameObject gob = Instantiate(Director.Instance.GetShotPrefab());
+        GameObject gob = Instantiate(prefab);
         Shot shot = gob.GetComponent<Shot>();
-        shot.Init(pos, dir);
-
-        Director.Instance.audioManager.Play(sfx);
+        shot.Init(pos, dir, sfx);
     }
 
     // POLYMORPHISM (overloading)
     protected void FireShot(Vector3 pos, Vector3 dir)
     {
-        FireShot(pos, dir, DEFAULT_SHOT_DELAY, AudioManager.SFX.SHOT01);
+        FireShot(pos, dir, Director.Instance.GetEnemyShotPrefab(), DEFAULT_SHOT_DELAY, AudioManager.SFX.SHOT01);
     }
 
-
+    // ABSTRACTION
     protected void ShowHit(Vector3 pos)
     {
         GameObject gob = Instantiate(Director.Instance.GetHitBigPrefab());
-        Debug.Assert(gob != null, "no bighit prefab");
         HitBig hit = gob.GetComponent<HitBig>();
         hit.Init(pos);
     }
 
+    // ABSTRACTION
+    protected void ShowHitMedium(Vector3 pos)
+    {
+        GameObject gob = Instantiate(Director.Instance.GetHitMediumPrefab());
+        HitMed hit = gob.GetComponent<HitMed>();
+        hit.Init(pos);
+    }
+
+    // ABSTRACTION
     protected void BlowUp()
     {
-        Debug.Log("ROBOT hit: " + gameObject.tag);
-
         ShowHit(gameObject.transform.position);
         Destroy(gameObject);
 
         Director.Instance.audioManager.PlayExplosion();
     }
 
-    // POLYMORPHISM
-    protected virtual void HandleGettingHit(Collision col)
+    // ABSTRACTION
+    protected void Damage()
     {
-        if (col.collider.tag.Equals("ShotTag"))
+        ShowHitMedium(gameObject.transform.position);
+
+        Director.Instance.audioManager.PlayExplosion(.5f);
+    }
+
+    // POLYMORPHISM
+    protected virtual void HandleCollision(Collision col)
+    {
+        if (col.collider.tag.Equals(Director.SHOT_PLAYER_TAG))
         {
-            BlowUp();
+            --hitsToKill;
+
+            if (hitsToKill <= 0)
+                BlowUp();
+            else
+                Damage();
         }
     }
 
@@ -140,9 +165,10 @@ public class Robot : MonoBehaviour
     {
         Debug.Log("ROBOT hit " + col.collider.name);
 
-        HandleGettingHit(col);
+        HandleCollision(col);
     }
 
+    // ABSTRACTION
     protected void SetPositionFromIndex()
     {
         Vector3 pos = Maze.GetMazePositionFromIndex(mazeX, mazeY);
@@ -150,12 +176,36 @@ public class Robot : MonoBehaviour
         gameObject.transform.position = pos;
     }
 
+    // POLYMORPHISM
     public virtual void HandleArrival()
     {
         RemoveMarkers();
         FindRandomDestination();
     }
 
+    // POLYMORPHISM
+    protected virtual int GetRetargetSteps()
+    {
+        return RANDOM_EVALUATION_STEPS;
+    }
+
+    // POLYMORPHISM
+    protected bool ShouldRetarget()
+    {
+        --nextTargetEvaluation;
+
+        if (nextTargetEvaluation > 0)
+        {
+            return false;
+        }
+        else
+        {
+            nextTargetEvaluation = GetRetargetSteps();
+            return true;
+        }
+    }
+
+    // ABSTRACTION
     protected void HandleMove()
     {
         Vector3 pos = gameObject.transform.position;
@@ -167,13 +217,19 @@ public class Robot : MonoBehaviour
 
         gameObject.transform.position = pos;
 
-        if (distanceToNextTravelled >= distanceToNext)
+        if (distanceToNextTravelled >= distanceToNext)  // arrived at next grid point
         {
             mazeX = mazeNextX;
             mazeY = mazeNextY;
             SetPositionFromIndex();
 
             if ((mazeX == mazeFinalX) && (mazeY == mazeFinalY))     // arrived at target?
+            {
+                HandleArrival();
+                return;
+            }
+
+            if (ShouldRetarget())       // hunters: evaluate new path to target
             {
                 HandleArrival();
                 return;
@@ -190,6 +246,7 @@ public class Robot : MonoBehaviour
         }
     }
 
+    // ABSTRACTION
     protected void MoveToNextPosition()
     {
         behavior = BEHAVIOR.MOVING;
@@ -209,9 +266,10 @@ public class Robot : MonoBehaviour
         Velocity = Vector3.Normalize(toDest) * speed;
     }
 
+    // ABSTRACTION
     protected void CreateTargetPath()
     {
-        currentPathLength = maze.FindBestPath(mazeX, mazeY, mazeFinalX, mazeFinalY, currentPath);
+        currentPathLength = Director.Instance.maze.FindBestPath(mazeX, mazeY, mazeFinalX, mazeFinalY, currentPath);
         currentPathIndex = 1;   // 0 is current pos
 
         MoveToNextPosition();
@@ -219,25 +277,47 @@ public class Robot : MonoBehaviour
         ShowMarkers();
     }
 
+    // ABSTRACTION
     protected bool SetRandomPosition()
     {
-        int[] testPos = maze.GetEmptySpaceInMaze();
+        int[] testPos = Director.Instance.maze.GetEmptySpaceInMaze();
 
-        if (testPos != null)
-        {
-            mazeX = testPos[0];
-            mazeY = testPos[1];
-            SetPositionFromIndex();
+        if (testPos == null)
+            return false;
 
-            return true;
-        }
+        mazeX = testPos[0];
+        mazeY = testPos[1];
+        SetPositionFromIndex();
 
-        return false;
+        return true;
     }
 
+    // POLYMORPHISM (overloading)
+    protected bool SetRandomPosition(GameObject player)
+    {
+        if (player == null)
+            return SetRandomPosition();
+
+        bool bDistOk;   // don't spawn too close to player
+
+        do
+        {
+            bool bOk = SetRandomPosition();
+            if (!bOk)
+                return false;
+
+            Vector3 d = player.transform.position - gameObject.transform.position;
+            bDistOk = d.magnitude >= PLAYER_SAFE_RANGE ? true : false;
+
+        } while (!bDistOk);
+
+        return true;
+    }
+
+    // ABSTRACTION
     protected void FindRandomDestination()
     {
-        int[] testPos = maze.GetEmptySpaceInMaze();
+        int[] testPos = Director.Instance.maze.GetEmptySpaceInMaze();
 
         mazeFinalX = testPos[0];
         mazeFinalY = testPos[1];
@@ -250,9 +330,10 @@ public class Robot : MonoBehaviour
         CreateTargetPath();
     }
 
+    // ABSTRACTION
     protected bool FindPlayer()
     {
-        GameObject player = GameObject.FindGameObjectWithTag("PlayerTag");
+        GameObject player = GameObject.FindGameObjectWithTag(Director.PLAYER_TAG);
 
         if (player == null)
             return false;
@@ -265,18 +346,53 @@ public class Robot : MonoBehaviour
         mazeFinalX = p.mazeX;
         mazeFinalY = p.mazeY;
 
-        //Debug.Log("Player found");
-
         CreateTargetPath();
 
         return true;
+    }
+
+    // ABSTRACTION
+    protected void ShootPlayer()
+    {
+        // shoot at player?
+
+        if (shotDelay > 0)
+            return;
+
+        GameObject player = GameObject.FindGameObjectWithTag(Director.PLAYER_TAG);
+
+        if (player == null)
+            return;
+
+        // shoot if possible
+
+        Vector3 d = player.transform.position - gameObject.transform.position;
+
+        if (d.magnitude > TARGET_AIMED_SHOT_RANGE)  // far shot -> only up/down/left/right shots
+        {
+            if (Mathf.Abs(player.transform.position.z - transform.position.z) < TARGET_SHOT_RANGE)
+            {
+                FireShot(transform.position, player.transform.position.x < transform.position.x ? Vector3.left : Vector3.right);
+            }
+            else if (Mathf.Abs(player.transform.position.x - transform.position.x) < TARGET_SHOT_RANGE)
+            {
+                FireShot(transform.position, player.transform.position.z < transform.position.z ? Vector3.back : Vector3.forward);
+            }
+        }
+        else
+        {
+            // near shot - aim
+
+            d.Normalize();
+            FireShot(transform.position, d);
+        }
     }
 
 
     //------------------------------------------------
     //
     // DEBUG / TEST CODE
-    
+
     protected void ShowMarkers()
     {
 #if SHOW_MARKERS

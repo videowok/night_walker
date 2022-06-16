@@ -11,7 +11,10 @@ public class AudioManager : MonoBehaviour
         HIT01,
         HIT02,
         SHOT00,
-        SHOT01
+        SHOT01,
+        GAME_START,
+        GAME_OVER,
+        THUMP
     };
 
     [SerializeField] AudioSource audioSrc;
@@ -34,10 +37,25 @@ public class AudioManager : MonoBehaviour
         //audioSrc.Play();
         audioSrc.PlayOneShot(audioClip[(int)index]);    // mixed together
     }
+
+    // POLYMORPHISM (overloading)
+    public void Play(SFX index, float vol)
+    {
+        audioSrc.PlayOneShot(audioClip[(int)index], vol);    // mixed together
+    }
+
     public void PlayExplosion()
     {
         int index = Random.Range((int)SFX.HIT00, (int)SFX.HIT02 + 1);
 
         Play((SFX)index);
+    }
+
+    // POLYMORPHISM (overloading)
+    public void PlayExplosion(float vol)
+    {
+        int index = Random.Range((int)SFX.HIT00, (int)SFX.HIT02 + 1);
+
+        Play((SFX)index, vol);
     }
 }
