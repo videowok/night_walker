@@ -129,24 +129,26 @@ public class Director : MonoBehaviour
             StartGame();
             return;
         }
-        else if (Input.GetKeyDown(KeyCode.M))
-        {
-            RebuildMaze();
-            return;
-        }
-        else if (Input.GetKeyDown(KeyCode.Tab))
-        {
-            cameraManager.SwitchCamera();
-        }
 
         switch (gameMode)
         {
             case GAMEMODE.DEMO:
 
+                if (Input.GetKeyDown(KeyCode.M))
+                {
+                    RebuildMaze();
+                    return;
+                }
+
                 HandleSpawning();
                 break;
 
             case GAMEMODE.GAME:
+
+                if (Input.GetKeyDown(KeyCode.Tab))
+                {
+                    cameraManager.SwitchCamera();
+                }
 
                 diffCheckInterval -= Time.deltaTime;
 
